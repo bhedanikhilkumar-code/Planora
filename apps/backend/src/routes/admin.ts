@@ -13,7 +13,8 @@ import {
   adminRoleSchema,
   adminSettingsSchema,
   adminUserActionSchema,
-  adminUserQuerySchema
+  adminUserQuerySchema,
+  idParamSchema
 } from '../utils/schemas.js';
 
 export const adminRouter = Router();
@@ -54,12 +55,14 @@ adminRouter.get('/users', async (req, res) => {
     }),
     prisma.user.count({ where })
   ]);
+
   res.json({ items, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 adminRouter.get('/users/:id', async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const user = await prisma.user.findUnique({
-    where: { id: req.params.id },
+    where: { id },
     select: {
       id: true,
       email: true,
@@ -75,23 +78,26 @@ adminRouter.get('/users/:id', async (req, res) => {
 });
 
 adminRouter.patch('/users/:id/ban', async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const { banned } = adminUserActionSchema.parse(req.body);
-  const user = await prisma.user.update({ where: { id: req.params.id }, data: { banned } });
+  const user = await prisma.user.update({ where: { id }, data: { banned } });
   await audit(req.user!.id, banned ? 'BAN_USER' : 'UNBAN_USER', 'USER', user.id, req.ip, { banned });
   res.json({ id: user.id, banned: user.banned });
 });
 
 adminRouter.patch('/users/:id/role', async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const { role } = adminRoleSchema.parse(req.body);
-  const user = await prisma.user.update({ where: { id: req.params.id }, data: { role } });
+  const user = await prisma.user.update({ where: { id }, data: { role } });
   await audit(req.user!.id, 'CHANGE_ROLE', 'USER', user.id, req.ip, { role });
   res.json({ id: user.id, role: user.role });
 });
 
 adminRouter.post('/users/:id/reset-password', async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const tempPassword = `Tmp-${crypto.randomBytes(6).toString('hex')}`;
-  await prisma.user.update({ where: { id: req.params.id }, data: { passwordHash: await hashPassword(tempPassword) } });
-  await audit(req.user!.id, 'RESET_PASSWORD', 'USER', req.params.id, req.ip);
+  await prisma.user.update({ where: { id }, data: { passwordHash: await hashPassword(tempPassword) } });
+  await audit(req.user!.id, 'RESET_PASSWORD', 'USER', id, req.ip);
   res.json({ message: 'Temporary password generated', tempPassword });
 });
 
@@ -109,6 +115,7 @@ adminRouter.get('/events', async (req, res) => {
         }
       : {})
   };
+
   const [items, total] = await Promise.all([
     prisma.event.findMany({
       where,
@@ -119,12 +126,14 @@ adminRouter.get('/events', async (req, res) => {
     }),
     prisma.event.count({ where })
   ]);
+
   res.json({ items, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 adminRouter.delete('/events/:id', async (req, res) => {
-  await prisma.event.delete({ where: { id: req.params.id } });
-  await audit(req.user!.id, 'DELETE_EVENT', 'EVENT', req.params.id, req.ip);
+  const { id } = idParamSchema.parse(req.params);
+  await prisma.event.delete({ where: { id } });
+  await audit(req.user!.id, 'DELETE_EVENT', 'EVENT', id, req.ip);
   res.json({ message: 'Event removed' });
 });
 
@@ -135,6 +144,7 @@ adminRouter.get('/audit-logs', async (req, res) => {
     ...(admin ? { adminId: admin } : {}),
     ...(from && to ? { createdAt: { gte: from, lte: to } } : {})
   };
+
   const [items, total] = await Promise.all([
     prisma.auditLog.findMany({
       where,
@@ -145,15 +155,12 @@ adminRouter.get('/audit-logs', async (req, res) => {
     }),
     prisma.auditLog.count({ where })
   ]);
+
   res.json({ items, page, limit, total, totalPages: Math.ceil(total / limit) });
 });
 
 adminRouter.get('/settings', async (_req, res) => {
-  const settings = await prisma.systemSetting.upsert({
-    where: { id: 'singleton' },
-    create: { id: 'singleton' },
-    update: {}
-  });
+  const settings = await prisma.systemSetting.upsert({ where: { id: 'singleton' }, create: { id: 'singleton' }, update: {} });
   res.json(settings);
 });
 
@@ -164,6 +171,7 @@ adminRouter.patch('/settings', async (req, res) => {
     create: { id: 'singleton', registrationEnabled },
     update: { registrationEnabled }
   });
-  await audit(req.user!.id, 'UPDATE_SYSTEM_SETTINGS', 'SYSTEM', 'singleton', req.ip, { registrationEnabled });
+
+  await audit(req.user!.id, 'UPDATE_SETTINGS', 'SYSTEM', 'singleton', req.ip, { registrationEnabled });
   res.json(settings);
 });

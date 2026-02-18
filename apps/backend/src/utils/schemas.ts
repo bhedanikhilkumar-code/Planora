@@ -5,6 +5,11 @@ export const registerSchema = z.object({ email: z.string().email(), password: z.
 export const loginSchema = registerSchema;
 export const resetSchema = z.object({ token: z.string().min(8), password: z.string().min(8) });
 
+export const paginationSchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20)
+});
+
 export const eventSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
@@ -28,3 +33,20 @@ export const recurrenceSchema = z.object({
 });
 
 export const queryRangeSchema = z.object({ from: dateInAllowedRange, to: dateInAllowedRange });
+
+export const adminLoginSchema = z.object({ email: z.string().email(), password: z.string().min(8) });
+export const adminUserQuerySchema = paginationSchema.extend({ search: z.string().optional() });
+export const adminUserActionSchema = z.object({ banned: z.boolean() });
+export const adminRoleSchema = z.object({ role: z.enum(['ADMIN', 'USER']) });
+export const adminEventsQuerySchema = paginationSchema.extend({
+  q: z.string().optional(),
+  from: dateInAllowedRange.optional(),
+  to: dateInAllowedRange.optional()
+});
+export const adminAuditQuerySchema = paginationSchema.extend({
+  action: z.string().optional(),
+  admin: z.string().optional(),
+  from: dateInAllowedRange.optional(),
+  to: dateInAllowedRange.optional()
+});
+export const adminSettingsSchema = z.object({ registrationEnabled: z.boolean() });

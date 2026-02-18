@@ -55,6 +55,21 @@ npm run test -w @planora/frontend
 - Admin: `admin@example.com` / `Admin@12345`
 - User: `user@example.com` / `User@12345`
 
+## Admin Control Panel
+- Admin login route: `/admin/login`
+- Admin routes (protected):
+  - `/admin/dashboard`
+  - `/admin/users`
+  - `/admin/users/:id`
+  - `/admin/events`
+  - `/admin/audit-logs`
+  - `/admin/settings`
+
+### Default admin credentials
+- Email: `admin@example.com`
+- Password: `Admin@12345`
+
+
 ## API docs
 
 ### Auth

@@ -13,6 +13,8 @@ authRouter.use(authRateLimit);
 
 authRouter.post('/register', async (req, res) => {
   const body = registerSchema.parse(req.body);
+  const setting = await prisma.systemSetting.findUnique({ where: { id: 'singleton' } });
+  if (setting && !setting.registrationEnabled) throw new AppError(403, 'Registration is currently disabled.');
   const exists = await prisma.user.findUnique({ where: { email: body.email } });
   if (exists) throw new AppError(409, 'Email already registered');
   const user = await prisma.user.create({ data: { email: body.email, passwordHash: await hashPassword(body.password) } });

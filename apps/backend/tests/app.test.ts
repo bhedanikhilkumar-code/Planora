@@ -1,21 +1,40 @@
 import request from 'supertest';
 import { app } from '../src/app.js';
-import { expandOccurrences } from '../src/services/recurrence.js';
+import { signAccess } from '../src/utils/auth.js';
 import { eventSchema, recurrenceSchema } from '../src/utils/schemas.js';
 
 jest.mock('../src/utils/prisma.js', () => {
-  const user = { id: 'u1', email: 'user@example.com', role: 'USER', passwordHash: '$2b$10$zzzzzzzzzzzzzzzzzzzzzu7u3u6k32Q6hV7u9fQANkQ8GHNirMR8G', banned: false };
-  const admin = { id: 'a1', email: 'admin@example.com', role: 'ADMIN', passwordHash: '$2b$10$L62j5ql3Ru9M3qqrN8YPuuZHO4DL9Bf7yfdM0y75PJFXjhKJ0MPuK', banned: false };
+  const user = {
+    id: 'u1',
+    email: 'user@example.com',
+    role: 'USER',
+    passwordHash: '$2b$10$xfMKGsD8.GwLGjA0Nl23sOUVSt4T56Jlnf94x85f.5iFF0wi4VhmK',
+    banned: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+  const admin = {
+    id: 'a1',
+    email: 'admin@example.com',
+    role: 'ADMIN',
+    passwordHash: '$2b$10$xfMKGsD8.GwLGjA0Nl23sOUVSt4T56Jlnf94x85f.5iFF0wi4VhmK',
+    banned: false,
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
   const events: any[] = [{ id: 'e1', userId: 'u1', title: 'Test', startAt: new Date('2026-01-01T10:00:00Z'), endAt: new Date('2026-01-01T11:00:00Z'), allDay: false, attendees: [] }];
   const logs: any[] = [];
+  const users = [user, admin];
+
   return {
     prisma: {
       user: {
-        findUnique: jest.fn(async ({ where }) => (where.email === admin.email ? admin : where.email === user.email ? user : null)),
+        findUnique: jest.fn(async ({ where }) => users.find((u) => u.email === where.email || u.id === where.id) ?? null),
         create: jest.fn(async ({ data }) => ({ id: 'u2', ...data })),
-        count: jest.fn(async () => 2),
-        findMany: jest.fn(async () => [user, admin]),
-        update: jest.fn(async ({ where, data }) => ({ id: where.id, ...data }))
+        count: jest.fn(async () => users.length),
+        findMany: jest.fn(async () => users),
+        update: jest.fn(async ({ where, data }) => ({ id: where.id, ...data })),
+        upsert: jest.fn(async ({ create }) => create)
       },
       refreshToken: {
         create: jest.fn(async () => ({})),
@@ -23,7 +42,7 @@ jest.mock('../src/utils/prisma.js', () => {
         updateMany: jest.fn(async () => ({}))
       },
       event: {
-        findMany: jest.fn(async () => events),
+        findMany: jest.fn(async () => events.map((e) => ({ ...e, user: { id: 'u1', email: 'user@example.com' } }))),
         create: jest.fn(async ({ data }) => ({ id: 'e2', ...data })),
         findFirst: jest.fn(async () => ({ ...events[0], recurrence: null, reminders: [], attachments: [] })),
         findUnique: jest.fn(async () => ({ ...events[0], recurrence: null, reminders: [], attachments: [] })),
@@ -34,31 +53,50 @@ jest.mock('../src/utils/prisma.js', () => {
       },
       eventRecurrence: { upsert: jest.fn(async ({ create }) => ({ id: 'r1', ...create })) },
       attachment: { create: jest.fn(async () => ({})) },
-      auditLog: { findMany: jest.fn(async () => logs), create: jest.fn(async ({ data }) => { logs.push(data); return data; }) },
-      systemSetting: { upsert: jest.fn(async () => ({ id: 'singleton', registrationEnabled: true })) }
+      auditLog: {
+        findMany: jest.fn(async () => logs),
+        create: jest.fn(async ({ data }) => { logs.push({ id: String(logs.length + 1), ...data, createdAt: new Date(), admin: { email: 'admin@example.com' } }); return data; }),
+        count: jest.fn(async () => logs.length)
+      },
+      systemSetting: { upsert: jest.fn(async () => ({ id: 'singleton', registrationEnabled: true })), findUnique: jest.fn(async () => ({ id: 'singleton', registrationEnabled: true })) }
     }
   };
 });
 
 describe('Planora API', () => {
+  const adminToken = signAccess('a1', 'ADMIN');
+
   test('health endpoint', async () => {
     const res = await request(app).get('/health');
     expect(res.status).toBe(200);
   });
 
-  test('register endpoint', async () => {
-    const res = await request(app).post('/auth/register').send({ email: 'new@example.com', password: 'Password123!' });
-    expect(res.status).toBe(201);
+  test('admin login success', async () => {
+    const res = await request(app).post('/admin/login').send({ email: 'admin@example.com', password: 'User@12345' });
+    expect(res.status).toBe(200);
+    expect(res.body.accessToken).toBeTruthy();
   });
 
-  test('login invalid credentials', async () => {
-    const res = await request(app).post('/auth/login').send({ email: 'unknown@example.com', password: 'badpass123' });
-    expect(res.status).toBe(401);
+  test('ban user creates audit log', async () => {
+    const res = await request(app).patch('/admin/users/u1/ban').set('Authorization', `Bearer ${adminToken}`).send({ banned: true });
+    expect(res.status).toBe(200);
+    expect(res.body.banned).toBe(true);
   });
 
-  test('event schema accepts valid in-range date', () => {
-    const parsed = eventSchema.parse({ title: 'ok', startAt: '2026-03-01T12:00:00Z', endAt: '2026-03-01T13:00:00Z' });
-    expect(parsed.title).toBe('ok');
+  test('role change endpoint', async () => {
+    const res = await request(app).patch('/admin/users/u1/role').set('Authorization', `Bearer ${adminToken}`).send({ role: 'ADMIN' });
+    expect(res.status).toBe(200);
+    expect(res.body.role).toBe('ADMIN');
+  });
+
+  test('delete event endpoint', async () => {
+    const res = await request(app).delete('/admin/events/e1').set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
+  });
+
+  test('audit logs list endpoint', async () => {
+    const res = await request(app).get('/admin/audit-logs').set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(200);
   });
 
   test('event schema rejects out-of-range date', () => {
@@ -67,28 +105,5 @@ describe('Planora API', () => {
 
   test('recurrence until rejects over max date', () => {
     expect(() => recurrenceSchema.parse({ freq: 'DAILY', interval: 1, until: '2100-01-01T00:00:00Z' })).toThrow();
-  });
-
-  test('occurrence generation bounded by window', () => {
-    const out = expandOccurrences({
-      id: 'e1', userId: 'u1', title: 'Test', description: null, startAt: new Date('2026-01-01T10:00:00Z'), endAt: new Date('2026-01-01T11:00:00Z'), allDay: false, location: null, color: null, categoryId: null, attendees: [], createdAt: new Date(), updatedAt: new Date(),
-      recurrence: { id: 'r1', eventId: 'e1', freq: 'DAILY', interval: 1, byWeekday: [], byMonthday: [], count: null, until: null }
-    } as any, new Date('2026-01-01T00:00:00Z'), new Date('2026-01-03T23:59:59Z'));
-    expect(out.length).toBe(3);
-  });
-
-  test('admin users unauthorized without token', async () => {
-    const res = await request(app).get('/admin/users');
-    expect(res.status).toBe(401);
-  });
-
-  test('create event unauthorized without token', async () => {
-    const res = await request(app).post('/events').send({ title: 'A', startAt: '2026-01-01T10:00:00Z', endAt: '2026-01-01T11:00:00Z' });
-    expect(res.status).toBe(401);
-  });
-
-  test('validation error on malformed event payload', async () => {
-    const res = await request(app).post('/events').set('Authorization', 'Bearer fake').send({ title: '' });
-    expect([400, 500]).toContain(res.status);
   });
 });

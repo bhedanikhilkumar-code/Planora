@@ -1,0 +1,6 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+body { @apply bg-slate-100 text-slate-900; }
+input, select, textarea { @apply border rounded px-2 py-1; }
+button { @apply rounded px-3 py-1 bg-blue-600 text-white; }

@@ -1,0 +1,128 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum RecurrenceFreq {
+  DAILY
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  passwordHash  String
+  role          Role           @default(USER)
+  banned        Boolean        @default(false)
+  timezone      String         @default("UTC")
+  weekStartsOn  Int            @default(1)
+  hourFormat24  Boolean        @default(true)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  events        Event[]
+  categories    Category[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  userId    String
+  tokenHash String
+  revoked   Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id     String @id @default(uuid())
+  userId String
+  name   String
+  color  String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  events Event[]
+
+  @@unique([userId, name])
+}
+
+model Event {
+  id          String            @id @default(uuid())
+  userId      String
+  title       String
+  description String?
+  startAt     DateTime
+  endAt       DateTime
+  allDay      Boolean           @default(false)
+  location    String?
+  color       String?
+  categoryId  String?
+  attendees   String[]          @default([])
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  category    Category?         @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  recurrence  EventRecurrence?
+  reminders   Reminder[]
+  attachments Attachment[]
+}
+
+model EventRecurrence {
+  id         String         @id @default(uuid())
+  eventId    String         @unique
+  freq       RecurrenceFreq
+  interval   Int            @default(1)
+  byWeekday  Int[]          @default([])
+  byMonthday Int[]          @default([])
+  count      Int?
+  until      DateTime?
+  event      Event          @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id            String   @id @default(uuid())
+  eventId       String
+  minutesBefore Int
+  event         Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model Attachment {
+  id          String   @id @default(uuid())
+  eventId     String
+  filename    String
+  mimetype    String
+  size        Int
+  storagePath String
+  createdAt   DateTime @default(now())
+  event       Event    @relation(fields: [eventId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  adminId    String
+  action     String
+  targetType String
+  targetId   String
+  ip         String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  admin      User     @relation(fields: [adminId], references: [id], onDelete: Cascade)
+}
+
+model SystemSetting {
+  id                  String  @id @default("singleton")
+  registrationEnabled Boolean @default(true)
+  emailFrom           String?
+  backupConfig        Json?
+}

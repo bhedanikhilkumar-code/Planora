@@ -1,0 +1,46 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: planora
+      POSTGRES_PASSWORD: planora
+      POSTGRES_DB: planora
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./apps/backend
+    environment:
+      DATABASE_URL: postgresql://planora:planora@db:5432/planora?schema=public
+      JWT_ACCESS_SECRET: changeme_access
+      JWT_REFRESH_SECRET: changeme_refresh
+      FRONTEND_URL: http://localhost:5173
+      PORT: 4000
+    depends_on:
+      - db
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/backend:/app
+      - /app/node_modules
+
+  frontend:
+    build:
+      context: ./apps/frontend
+    environment:
+      VITE_API_BASE_URL: http://localhost:4000
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./apps/frontend:/app
+      - /app/node_modules
+
+volumes:
+  pg_data:

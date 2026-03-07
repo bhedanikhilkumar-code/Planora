@@ -94,6 +94,12 @@ npm run test -w @planora/frontend
 - `PUT /events/:id`
 - `DELETE /events/:id`
 
+#### Event create payload notes
+- `reminders` supports either:
+  - JSON array in multipart form-data (example: `"[10,30]"`)
+  - direct array in JSON body (example: `[10,30]`)
+- Invalid `reminders` payloads return: `Invalid reminders payload. Provide a JSON array of minutes.`
+
 ### Recurrence
 - `POST /events/:id/recurrence`
 - `GET /events/:id/occurrences?from=&to=`
@@ -101,6 +107,15 @@ npm run test -w @planora/frontend
 ### ICS
 - `GET /events/export/ics?from=&to=`
 - `POST /events/import/ics`
+
+#### ICS import validation
+- Invalid file content returns: `Invalid ICS file.`
+- Imported events must have `endAt > startAt`.
+- Imported event dates must still be within `2000-01-01` to `2099-12-31`.
+
+## Frontend calendar UX
+- Event modal validates required fields and blocks save when `endAt <= startAt`.
+- Calendar page supports local search-by-title and optional date range filtering from the side filter panel.
 
 ### Admin
 - `POST /admin/login`

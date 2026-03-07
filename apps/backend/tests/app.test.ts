@@ -197,6 +197,33 @@ describe('Planora admin engineering requirements', () => {
     expect(String(res.body.message)).toContain('Both from and to are required');
   });
 
+  test('events list rejects from greater than to', async () => {
+    const res = await request(app)
+      .get('/events?from=2026-01-02T00:00:00Z&to=2026-01-01T00:00:00Z')
+      .set('Authorization', `Bearer ${userToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+    expect(String(res.body.message)).toContain('From date must be before or equal to to date');
+  });
+
+  test('admin events requires both from and to in date filter', async () => {
+    const res = await request(app)
+      .get('/admin/events?from=2026-01-01T00:00:00Z')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+    expect(String(res.body.message)).toContain('Both from and to are required');
+  });
+
+  test('admin audit logs rejects from greater than to', async () => {
+    const res = await request(app)
+      .get('/admin/audit-logs?from=2026-01-02T00:00:00Z&to=2026-01-01T00:00:00Z')
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+    expect(String(res.body.message)).toContain('From date must be before or equal to to date');
+  });
+
   test('event schema rejects out-of-range date', () => {
     expect(() => eventSchema.parse({ title: 'bad', startAt: '1999-12-31T00:00:00Z', endAt: '2000-01-01T01:00:00Z' })).toThrow('Date must be between 2000-01-01 and 2099-12-31.');
   });

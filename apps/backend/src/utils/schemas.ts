@@ -38,7 +38,14 @@ export const recurrenceSchema = z.object({
   until: dateInAllowedRange.optional()
 });
 
-export const queryRangeSchema = z.object({ from: dateInAllowedRange, to: dateInAllowedRange });
+const isValidOptionalDateRange = (v: { from?: Date; to?: Date }) => !v.from || !v.to || v.from <= v.to;
+const optionalRangePairError = 'Both from and to are required when filtering by date range';
+const optionalRangeOrderError = 'From date must be before or equal to to date';
+const requiredRangeOrderError = 'From date must be before or equal to to date';
+
+export const queryRangeSchema = z
+  .object({ from: dateInAllowedRange, to: dateInAllowedRange })
+  .refine((v) => v.from <= v.to, { message: requiredRangeOrderError });
 
 export const eventsListQuerySchema = paginationSchema.extend({
   q: z.string().default(''),
@@ -46,7 +53,9 @@ export const eventsListQuerySchema = paginationSchema.extend({
   from: dateInAllowedRange.optional(),
   to: dateInAllowedRange.optional()
 }).refine((v) => (v.from && v.to) || (!v.from && !v.to), {
-  message: 'Both from and to are required when filtering by date range'
+  message: optionalRangePairError
+}).refine((v) => isValidOptionalDateRange(v), {
+  message: optionalRangeOrderError
 });
 
 export const adminLoginSchema = z.object({ email: z.string().email(), password: z.string().min(8) });
@@ -57,11 +66,19 @@ export const adminEventsQuerySchema = paginationSchema.extend({
   q: z.string().optional(),
   from: dateInAllowedRange.optional(),
   to: dateInAllowedRange.optional()
+}).refine((v) => (v.from && v.to) || (!v.from && !v.to), {
+  message: optionalRangePairError
+}).refine((v) => isValidOptionalDateRange(v), {
+  message: optionalRangeOrderError
 });
 export const adminAuditQuerySchema = paginationSchema.extend({
   action: z.string().optional(),
   admin: z.string().optional(),
   from: dateInAllowedRange.optional(),
   to: dateInAllowedRange.optional()
+}).refine((v) => (v.from && v.to) || (!v.from && !v.to), {
+  message: optionalRangePairError
+}).refine((v) => isValidOptionalDateRange(v), {
+  message: optionalRangeOrderError
 });
 export const adminSettingsSchema = z.object({ registrationEnabled: z.boolean() });

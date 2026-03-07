@@ -269,6 +269,67 @@ describe('Planora admin engineering requirements', () => {
     expect(String(res.body.message)).toContain('Invalid reminders payload');
   });
 
+  test('events import accepts a valid ICS file', async () => {
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Planora//EN',
+      'BEGIN:VEVENT',
+      'UID:ok-1@example.com',
+      'DTSTAMP:20260101T000000Z',
+      'DTSTART:20260201T100000Z',
+      'DTEND:20260201T110000Z',
+      'SUMMARY:Imported Item',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const res = await request(app)
+      .post('/events/import/ics')
+      .set('Authorization', `Bearer ${userToken}`)
+      .attach('file', Buffer.from(ics, 'utf8'), { filename: 'events.ics', contentType: 'text/calendar' });
+
+    expect(res.status).toBe(200);
+    expect(res.body.imported).toBe(1);
+    expect(Array.isArray(res.body.ids)).toBe(true);
+  });
+
+  test('events import rejects malformed ICS payload', async () => {
+    const res = await request(app)
+      .post('/events/import/ics')
+      .set('Authorization', `Bearer ${userToken}`)
+      .attach('file', Buffer.from('not-ics', 'utf8'), { filename: 'broken.ics', contentType: 'text/calendar' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('AppError');
+    expect(String(res.body.message)).toContain('Invalid ICS file');
+  });
+
+  test('events import rejects ICS events where end is before start', async () => {
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'PRODID:-//Planora//EN',
+      'BEGIN:VEVENT',
+      'UID:bad-range-1@example.com',
+      'DTSTAMP:20260101T000000Z',
+      'DTSTART:20260201T120000Z',
+      'DTEND:20260201T110000Z',
+      'SUMMARY:Bad Range',
+      'END:VEVENT',
+      'END:VCALENDAR'
+    ].join('\r\n');
+
+    const res = await request(app)
+      .post('/events/import/ics')
+      .set('Authorization', `Bearer ${userToken}`)
+      .attach('file', Buffer.from(ics, 'utf8'), { filename: 'bad-range.ics', contentType: 'text/calendar' });
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('AppError');
+    expect(String(res.body.message)).toContain('Event end date must be after start date');
+  });
+
   test('event schema rejects out-of-range date', () => {
     expect(() => eventSchema.parse({ title: 'bad', startAt: '1999-12-31T00:00:00Z', endAt: '2000-01-01T01:00:00Z' })).toThrow('Date must be between 2000-01-01 and 2099-12-31.');
   });

@@ -12,6 +12,31 @@ import { eventSchema, eventsListQuerySchema, eventUpdateSchema, idParamSchema, q
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const storage = new LocalStorageAdapter();
+const remindersPayloadError = 'Invalid reminders payload. Provide a JSON array of minutes.';
+
+const parseRemindersInput = (raw: unknown): unknown[] => {
+  if (raw === undefined || raw === null || raw === '') {
+    return [];
+  }
+
+  if (Array.isArray(raw)) {
+    return raw;
+  }
+
+  if (typeof raw === 'string') {
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        throw new AppError(400, remindersPayloadError);
+      }
+      return parsed;
+    } catch {
+      throw new AppError(400, remindersPayloadError);
+    }
+  }
+
+  throw new AppError(400, remindersPayloadError);
+};
 
 export const eventsRouter = Router();
 eventsRouter.use(requireAuth);
@@ -65,7 +90,7 @@ eventsRouter.get('/', asyncHandler(async (req, res) => {
 }));
 
 eventsRouter.post('/', upload.array('attachments', 4), asyncHandler(async (req, res) => {
-  const body = eventSchema.parse({ ...req.body, reminders: req.body.reminders ? JSON.parse(req.body.reminders) : [] });
+  const body = eventSchema.parse({ ...req.body, reminders: parseRemindersInput(req.body.reminders) });
   const files = (req.files as Express.Multer.File[]) ?? [];
   for (const file of files) {
     if (!['image/png', 'image/jpeg', 'application/pdf'].includes(file.mimetype)) throw new AppError(400, 'Unsupported attachment type');

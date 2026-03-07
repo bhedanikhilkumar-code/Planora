@@ -6,6 +6,7 @@ import { adminRouter } from './routes/admin.js';
 import { authRouter } from './routes/auth.js';
 import { eventsRouter } from './routes/events.js';
 import { env } from './config/env.js';
+import { asyncHandler } from './utils/asyncHandler.js';
 import { errorMiddleware } from './utils/errors.js';
 import { requireAuth } from './middleware/auth.js';
 import { prisma } from './utils/prisma.js';
@@ -18,10 +19,10 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
-app.get('/me', requireAuth, async (req, res) => {
+app.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, email: true, role: true, timezone: true, weekStartsOn: true, hourFormat24: true } });
   res.json(user);
-});
+}));
 app.use('/auth', authRouter);
 app.use('/events', eventsRouter);
 app.use('/admin', adminRouter);

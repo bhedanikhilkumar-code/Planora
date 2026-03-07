@@ -1,10 +1,25 @@
-import { Event, EventRecurrence, RecurrenceFreq } from '@prisma/client';
 import { RRule } from 'rrule';
 
-const mapFreq = (freq: RecurrenceFreq) => ({ DAILY: RRule.DAILY, WEEKLY: RRule.WEEKLY, MONTHLY: RRule.MONTHLY, YEARLY: RRule.YEARLY }[freq]);
+type RecurrenceFreq = 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'YEARLY';
+
+type RecurrencePayload = {
+  freq: RecurrenceFreq;
+  interval: number;
+  byWeekday: number[];
+  byMonthday: number[];
+  count: number | null;
+  until: Date | null;
+};
+
+type EventWithRecurrence = {
+  startAt: Date;
+  recurrence: RecurrencePayload | null;
+};
+
+const mapFreq = (freq: RecurrenceFreq): number => ({ DAILY: RRule.DAILY, WEEKLY: RRule.WEEKLY, MONTHLY: RRule.MONTHLY, YEARLY: RRule.YEARLY }[freq]);
 
 export const expandOccurrences = (
-  event: Event & { recurrence: EventRecurrence | null },
+  event: EventWithRecurrence,
   from: Date,
   to: Date
 ): Date[] => {

@@ -5,9 +5,10 @@ import ICAL from 'ical.js';
 import { requireAuth } from '../middleware/auth.js';
 import { expandOccurrences } from '../services/recurrence.js';
 import { LocalStorageAdapter } from '../services/storage.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { AppError } from '../utils/errors.js';
 import { prisma } from '../utils/prisma.js';
-import { eventSchema, eventsListQuerySchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
+import { eventSchema, eventsListQuerySchema, eventUpdateSchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const storage = new LocalStorageAdapter();
@@ -15,16 +16,21 @@ const storage = new LocalStorageAdapter();
 export const eventsRouter = Router();
 eventsRouter.use(requireAuth);
 
-eventsRouter.get('/export/ics', async (req, res) => {
+eventsRouter.get('/export/ics', asyncHandler(async (req, res) => {
   const { from, to } = queryRangeSchema.parse({ from: req.query.from, to: req.query.to });
   const events = await prisma.event.findMany({ where: { userId: req.user!.id, startAt: { gte: from }, endAt: { lte: to } } });
-  createEvents(events.map((e) => ({ title: e.title, description: e.description ?? '', start: [e.startAt.getUTCFullYear(), e.startAt.getUTCMonth() + 1, e.startAt.getUTCDate(), e.startAt.getUTCHours(), e.startAt.getUTCMinutes()], end: [e.endAt.getUTCFullYear(), e.endAt.getUTCMonth() + 1, e.endAt.getUTCDate(), e.endAt.getUTCHours(), e.endAt.getUTCMinutes()] })), (err, value) => {
-    if (err) throw new AppError(500, 'Failed to export ICS');
-    res.type('text/calendar').send(value);
+  const value = await new Promise<string>((resolve, reject) => {
+    createEvents(events.map((e: { title: string; description: string | null; startAt: Date; endAt: Date }) => ({ title: e.title, description: e.description ?? '', start: [e.startAt.getUTCFullYear(), e.startAt.getUTCMonth() + 1, e.startAt.getUTCDate(), e.startAt.getUTCHours(), e.startAt.getUTCMinutes()], end: [e.endAt.getUTCFullYear(), e.endAt.getUTCMonth() + 1, e.endAt.getUTCDate(), e.endAt.getUTCHours(), e.endAt.getUTCMinutes()] })), (err, result) => {
+      if (err || !result) {
+        return reject(new AppError(500, 'Failed to export ICS'));
+      }
+      resolve(result);
+    });
   });
-});
+  res.type('text/calendar').send(value);
+}));
 
-eventsRouter.post('/import/ics', upload.single('file'), async (req, res) => {
+eventsRouter.post('/import/ics', upload.single('file'), asyncHandler(async (req, res) => {
   if (!req.file) throw new AppError(400, 'ICS file is required');
   const jcalData = ICAL.parse(req.file.buffer.toString('utf-8'));
   const vcalendar = new ICAL.Component(jcalData);
@@ -39,9 +45,9 @@ eventsRouter.post('/import/ics', upload.single('file'), async (req, res) => {
     created.push(record.id);
   }
   res.json({ imported: created.length, ids: created });
-});
+}));
 
-eventsRouter.get('/', async (req, res) => {
+eventsRouter.get('/', asyncHandler(async (req, res) => {
   const { page, limit, q, category, from, to } = eventsListQuerySchema.parse(req.query);
   const events = await prisma.event.findMany({
     where: {
@@ -56,9 +62,9 @@ eventsRouter.get('/', async (req, res) => {
     orderBy: { startAt: 'asc' }
   });
   res.json(events);
-});
+}));
 
-eventsRouter.post('/', upload.array('attachments', 4), async (req, res) => {
+eventsRouter.post('/', upload.array('attachments', 4), asyncHandler(async (req, res) => {
   const body = eventSchema.parse({ ...req.body, reminders: req.body.reminders ? JSON.parse(req.body.reminders) : [] });
   const files = (req.files as Express.Multer.File[]) ?? [];
   for (const file of files) {
@@ -70,38 +76,38 @@ eventsRouter.post('/', upload.array('attachments', 4), async (req, res) => {
     await prisma.attachment.create({ data: { eventId: event.id, filename: file.originalname, mimetype: file.mimetype, size: file.size, storagePath } });
   }
   res.status(201).json(await prisma.event.findUnique({ where: { id: event.id }, include: { reminders: true, attachments: true, recurrence: true } }));
-});
+}));
 
-eventsRouter.get('/:id', async (req, res) => {
+eventsRouter.get('/:id', asyncHandler(async (req, res) => {
   const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id }, include: { reminders: true, attachments: true, recurrence: true } });
   if (!event) throw new AppError(404, 'Event not found');
   res.json(event);
-});
+}));
 
-eventsRouter.put('/:id', async (req, res) => {
-  const body = eventSchema.partial().parse(req.body);
+eventsRouter.put('/:id', asyncHandler(async (req, res) => {
+  const body = eventUpdateSchema.parse(req.body);
   const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
   if (!event) throw new AppError(404, 'Event not found');
   const updated = await prisma.event.update({ where: { id: event.id }, data: { ...body }, include: { recurrence: true, reminders: true } });
   res.json(updated);
-});
+}));
 
-eventsRouter.delete('/:id', async (req, res) => {
+eventsRouter.delete('/:id', asyncHandler(async (req, res) => {
   await prisma.event.deleteMany({ where: { id: req.params.id, userId: req.user!.id } });
   res.json({ message: 'Deleted' });
-});
+}));
 
-eventsRouter.post('/:id/recurrence', async (req, res) => {
+eventsRouter.post('/:id/recurrence', asyncHandler(async (req, res) => {
   const body = recurrenceSchema.parse(req.body);
   const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
   if (!event) throw new AppError(404, 'Event not found');
   const recurrence = await prisma.eventRecurrence.upsert({ where: { eventId: event.id }, update: body, create: { ...body, eventId: event.id } });
   res.status(201).json(recurrence);
-});
+}));
 
-eventsRouter.get('/:id/occurrences', async (req, res) => {
+eventsRouter.get('/:id/occurrences', asyncHandler(async (req, res) => {
   const { from, to } = queryRangeSchema.parse({ from: req.query.from, to: req.query.to });
   const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id }, include: { recurrence: true } });
   if (!event) throw new AppError(404, 'Event not found');
   res.json({ occurrences: expandOccurrences(event, from, to) });
-});
+}));

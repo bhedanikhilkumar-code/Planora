@@ -20,7 +20,7 @@ jest.mock('../src/utils/prisma.js', () => {
       id: 'a1',
       email: 'admin@example.com',
       role: 'ADMIN',
-      passwordHash: '$2b$10$xfMKGsD8.GwLGjA0Nl23sOUVSt4T56Jlnf94x85f.5iFF0wi4VhmK', // User@12345
+      passwordHash: '$2b$10$dKdP71BucEDFnG/M0.IPBuN0PBCl23v7YSfSzWQk1BHbUB3RcAuTa', // User@12345
       banned: false,
       createdAt: now,
       updatedAt: now
@@ -29,7 +29,7 @@ jest.mock('../src/utils/prisma.js', () => {
       id: 'u1',
       email: 'user@example.com',
       role: 'USER',
-      passwordHash: '$2b$10$xfMKGsD8.GwLGjA0Nl23sOUVSt4T56Jlnf94x85f.5iFF0wi4VhmK',
+      passwordHash: '$2b$10$dKdP71BucEDFnG/M0.IPBuN0PBCl23v7YSfSzWQk1BHbUB3RcAuTa',
       banned: false,
       createdAt: now,
       updatedAt: now

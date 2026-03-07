@@ -12,7 +12,7 @@ export const paginationSchema = z.object({
 
 export const idParamSchema = z.object({ id: z.string().min(1) });
 
-export const eventSchema = z.object({
+const eventBaseSchema = z.object({
   title: z.string().min(1),
   description: z.string().optional(),
   startAt: dateInAllowedRange,
@@ -23,7 +23,11 @@ export const eventSchema = z.object({
   categoryId: z.string().optional(),
   attendees: z.array(z.string().email()).default([]),
   reminders: z.array(z.number().int().min(0).max(10080)).default([])
-}).refine((d) => d.endAt > d.startAt, 'End date must be after start date');
+});
+
+export const eventSchema = eventBaseSchema.refine((d) => d.endAt > d.startAt, 'End date must be after start date');
+
+export const eventUpdateSchema = eventBaseSchema.partial().refine((d) => !d.startAt || !d.endAt || d.endAt > d.startAt, 'End date must be after start date');
 
 export const recurrenceSchema = z.object({
   freq: z.enum(['DAILY', 'WEEKLY', 'MONTHLY', 'YEARLY']),

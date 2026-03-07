@@ -1,9 +1,10 @@
 import { NextFunction, Request, Response } from 'express';
 import { AppError } from '../utils/errors.js';
+import { asyncHandler } from '../utils/asyncHandler.js';
 import { verifyAccess } from '../utils/auth.js';
 import { prisma } from '../utils/prisma.js';
 
-export const requireAuth = async (req: Request, _res: Response, next: NextFunction) => {
+export const requireAuth = asyncHandler(async (req: Request, _res: Response, next: NextFunction) => {
   const auth = req.headers.authorization;
   if (!auth?.startsWith('Bearer ')) throw new AppError(401, 'Unauthorized');
 
@@ -16,7 +17,7 @@ export const requireAuth = async (req: Request, _res: Response, next: NextFuncti
 
   req.user = { id: user.id, role: user.role };
   next();
-};
+});
 
 export const requireAdmin = (req: Request, _res: Response, next: NextFunction) => {
   if (!req.user) throw new AppError(401, 'Unauthorized');

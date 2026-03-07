@@ -32,6 +32,12 @@ npm run prisma:migrate -w @planora/backend
 npm run prisma:seed -w @planora/backend
 npm run dev
 ```
+Backend startup now validates env vars and exits early on invalid values. Required backend vars are:
+- `DATABASE_URL`
+- `JWT_ACCESS_SECRET` (minimum 16 chars)
+- `JWT_REFRESH_SECRET` (minimum 16 chars)
+- `PORT` (1-65535, defaults to `4000`)
+- `FRONTEND_URL` (valid URL, defaults to `http://localhost:5173`)
 
 ## Setup (Docker)
 ```bash

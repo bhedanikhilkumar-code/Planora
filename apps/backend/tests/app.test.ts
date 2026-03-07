@@ -1,6 +1,7 @@
 import request from 'supertest';
 import { app } from '../src/app.js';
 import { signAccess } from '../src/utils/auth.js';
+import { prisma } from '../src/utils/prisma.js';
 import { eventSchema, recurrenceSchema } from '../src/utils/schemas.js';
 
 type User = {
@@ -234,6 +235,38 @@ describe('Planora admin engineering requirements', () => {
     const res = await request(app).get('/events/%20').set('Authorization', `Bearer ${userToken}`);
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('ValidationError');
+  });
+
+  test('events create accepts reminders JSON array string in multipart payload', async () => {
+    const createMock = prisma.event.create as unknown as jest.Mock;
+    createMock.mockClear();
+
+    const res = await request(app)
+      .post('/events')
+      .set('Authorization', `Bearer ${userToken}`)
+      .field('title', 'Reminder parse')
+      .field('startAt', '2026-02-01T10:00:00Z')
+      .field('endAt', '2026-02-01T11:00:00Z')
+      .field('reminders', '[10,30]');
+
+    expect(res.status).toBe(201);
+    expect(createMock).toHaveBeenCalled();
+    const payload = createMock.mock.calls.at(-1)?.[0];
+    expect(payload?.data?.reminders?.create).toEqual([{ minutesBefore: 10 }, { minutesBefore: 30 }]);
+  });
+
+  test('events create rejects invalid reminders payload', async () => {
+    const res = await request(app)
+      .post('/events')
+      .set('Authorization', `Bearer ${userToken}`)
+      .field('title', 'Bad reminders')
+      .field('startAt', '2026-02-01T10:00:00Z')
+      .field('endAt', '2026-02-01T11:00:00Z')
+      .field('reminders', '{"minutes":10}');
+
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('AppError');
+    expect(String(res.body.message)).toContain('Invalid reminders payload');
   });
 
   test('event schema rejects out-of-range date', () => {

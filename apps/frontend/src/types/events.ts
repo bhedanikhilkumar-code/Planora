@@ -3,3 +3,9 @@ export type EventDraft = {
   startAt: string;
   endAt: string;
 };
+
+export type CalendarFilters = {
+  query: string;
+  from: string;
+  to: string;
+};

@@ -1,4 +1,5 @@
 import { Link, Navigate, Route, Routes } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import AdminLayout from './admin/components/AdminLayout';
 import AdminProtectedRoute from './admin/components/AdminProtectedRoute';
@@ -15,9 +16,12 @@ import ImportExportPage from './pages/ImportExportPage';
 import LandingPage from './pages/LandingPage';
 import SearchFilterPanel from './pages/SearchFilterPanel';
 import SettingsPage from './pages/SettingsPage';
+import type { CalendarFilters } from './types/events';
 
 export default function App() {
   const { auth } = useAuth();
+  const [filters, setFilters] = useState<CalendarFilters>({ query: '', from: '', to: '' });
+
   return (
     <div>
       <nav className="p-3 bg-slate-800 text-white flex gap-3"><Link to="/">Home</Link><Link to="/calendar">Calendar</Link><Link to="/settings">Settings</Link><Link to="/import-export">Import/Export</Link><Link to="/admin/dashboard">Admin</Link></nav>
@@ -27,7 +31,7 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/forgot-password" element={<ForgotPage />} />
         <Route path="/reset-password" element={<ResetPage />} />
-        <Route path="/calendar" element={auth ? <div className="grid grid-cols-4"><div className="col-span-3"><CalendarPage /></div><SearchFilterPanel /></div> : <Navigate to="/login" />} />
+        <Route path="/calendar" element={auth ? <div className="grid grid-cols-4"><div className="col-span-3"><CalendarPage filters={filters} /></div><SearchFilterPanel filters={filters} onChange={setFilters} /></div> : <Navigate to="/login" />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/import-export" element={<ImportExportPage />} />
 

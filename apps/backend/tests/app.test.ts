@@ -184,6 +184,12 @@ describe('Planora admin engineering requirements', () => {
     expect(res.body.total).toBeGreaterThan(20);
   });
 
+  test('admin user detail rejects whitespace-only id', async () => {
+    const res = await request(app).get('/admin/users/%20').set('Authorization', `Bearer ${adminToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+  });
+
   test('events list rejects invalid pagination query', async () => {
     const res = await request(app).get('/events?page=0').set('Authorization', `Bearer ${userToken}`);
     expect(res.status).toBe(400);
@@ -222,6 +228,12 @@ describe('Planora admin engineering requirements', () => {
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('ValidationError');
     expect(String(res.body.message)).toContain('From date must be before or equal to to date');
+  });
+
+  test('events detail rejects whitespace-only id', async () => {
+    const res = await request(app).get('/events/%20').set('Authorization', `Bearer ${userToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
   });
 
   test('event schema rejects out-of-range date', () => {

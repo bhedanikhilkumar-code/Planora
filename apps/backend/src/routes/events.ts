@@ -8,7 +8,7 @@ import { LocalStorageAdapter } from '../services/storage.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
 import { AppError } from '../utils/errors.js';
 import { prisma } from '../utils/prisma.js';
-import { eventSchema, eventsListQuerySchema, eventUpdateSchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
+import { eventSchema, eventsListQuerySchema, eventUpdateSchema, idParamSchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const storage = new LocalStorageAdapter();
@@ -79,35 +79,40 @@ eventsRouter.post('/', upload.array('attachments', 4), asyncHandler(async (req, 
 }));
 
 eventsRouter.get('/:id', asyncHandler(async (req, res) => {
-  const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id }, include: { reminders: true, attachments: true, recurrence: true } });
+  const { id } = idParamSchema.parse(req.params);
+  const event = await prisma.event.findFirst({ where: { id, userId: req.user!.id }, include: { reminders: true, attachments: true, recurrence: true } });
   if (!event) throw new AppError(404, 'Event not found');
   res.json(event);
 }));
 
 eventsRouter.put('/:id', asyncHandler(async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const body = eventUpdateSchema.parse(req.body);
-  const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
+  const event = await prisma.event.findFirst({ where: { id, userId: req.user!.id } });
   if (!event) throw new AppError(404, 'Event not found');
   const updated = await prisma.event.update({ where: { id: event.id }, data: { ...body }, include: { recurrence: true, reminders: true } });
   res.json(updated);
 }));
 
 eventsRouter.delete('/:id', asyncHandler(async (req, res) => {
-  await prisma.event.deleteMany({ where: { id: req.params.id, userId: req.user!.id } });
+  const { id } = idParamSchema.parse(req.params);
+  await prisma.event.deleteMany({ where: { id, userId: req.user!.id } });
   res.json({ message: 'Deleted' });
 }));
 
 eventsRouter.post('/:id/recurrence', asyncHandler(async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const body = recurrenceSchema.parse(req.body);
-  const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id } });
+  const event = await prisma.event.findFirst({ where: { id, userId: req.user!.id } });
   if (!event) throw new AppError(404, 'Event not found');
   const recurrence = await prisma.eventRecurrence.upsert({ where: { eventId: event.id }, update: body, create: { ...body, eventId: event.id } });
   res.status(201).json(recurrence);
 }));
 
 eventsRouter.get('/:id/occurrences', asyncHandler(async (req, res) => {
+  const { id } = idParamSchema.parse(req.params);
   const { from, to } = queryRangeSchema.parse({ from: req.query.from, to: req.query.to });
-  const event = await prisma.event.findFirst({ where: { id: req.params.id, userId: req.user!.id }, include: { recurrence: true } });
+  const event = await prisma.event.findFirst({ where: { id, userId: req.user!.id }, include: { recurrence: true } });
   if (!event) throw new AppError(404, 'Event not found');
   res.json({ occurrences: expandOccurrences(event, from, to) });
 }));

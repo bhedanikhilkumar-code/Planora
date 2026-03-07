@@ -10,7 +10,7 @@ export const paginationSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20)
 });
 
-export const idParamSchema = z.object({ id: z.string().min(1) });
+export const idParamSchema = z.object({ id: z.string().trim().min(1) });
 
 const eventBaseSchema = z.object({
   title: z.string().min(1),

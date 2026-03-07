@@ -1,6 +1,7 @@
 import { useState } from 'react';
+import type { EventDraft } from '../types/events';
 
-export const EventModal = ({ onSave }: { onSave: (payload: any) => void }) => {
+export const EventModal = ({ onSave }: { onSave: (payload: EventDraft) => void }) => {
   const [title, setTitle] = useState('');
   const [startAt, setStartAt] = useState('');
   const [endAt, setEndAt] = useState('');

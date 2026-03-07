@@ -7,7 +7,7 @@ import { expandOccurrences } from '../services/recurrence.js';
 import { LocalStorageAdapter } from '../services/storage.js';
 import { AppError } from '../utils/errors.js';
 import { prisma } from '../utils/prisma.js';
-import { eventSchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
+import { eventSchema, eventsListQuerySchema, queryRangeSchema, recurrenceSchema } from '../utils/schemas.js';
 
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const storage = new LocalStorageAdapter();
@@ -42,10 +42,7 @@ eventsRouter.post('/import/ics', upload.single('file'), async (req, res) => {
 });
 
 eventsRouter.get('/', async (req, res) => {
-  const page = Number(req.query.page ?? 1); const limit = Number(req.query.limit ?? 20);
-  const q = String(req.query.q ?? ''); const category = req.query.category as string | undefined;
-  const from = req.query.from ? new Date(String(req.query.from)) : undefined;
-  const to = req.query.to ? new Date(String(req.query.to)) : undefined;
+  const { page, limit, q, category, from, to } = eventsListQuerySchema.parse(req.query);
   const events = await prisma.event.findMany({
     where: {
       userId: req.user!.id,

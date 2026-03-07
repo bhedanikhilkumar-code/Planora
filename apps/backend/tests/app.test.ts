@@ -184,6 +184,19 @@ describe('Planora admin engineering requirements', () => {
     expect(res.body.total).toBeGreaterThan(20);
   });
 
+  test('events list rejects invalid pagination query', async () => {
+    const res = await request(app).get('/events?page=0').set('Authorization', `Bearer ${userToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+  });
+
+  test('events list requires both from and to in date filter', async () => {
+    const res = await request(app).get('/events?from=2026-01-01T00:00:00Z').set('Authorization', `Bearer ${userToken}`);
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ValidationError');
+    expect(String(res.body.message)).toContain('Both from and to are required');
+  });
+
   test('event schema rejects out-of-range date', () => {
     expect(() => eventSchema.parse({ title: 'bad', startAt: '1999-12-31T00:00:00Z', endAt: '2000-01-01T01:00:00Z' })).toThrow('Date must be between 2000-01-01 and 2099-12-31.');
   });

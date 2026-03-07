@@ -36,6 +36,15 @@ export const recurrenceSchema = z.object({
 
 export const queryRangeSchema = z.object({ from: dateInAllowedRange, to: dateInAllowedRange });
 
+export const eventsListQuerySchema = paginationSchema.extend({
+  q: z.string().default(''),
+  category: z.string().optional(),
+  from: dateInAllowedRange.optional(),
+  to: dateInAllowedRange.optional()
+}).refine((v) => (v.from && v.to) || (!v.from && !v.to), {
+  message: 'Both from and to are required when filtering by date range'
+});
+
 export const adminLoginSchema = z.object({ email: z.string().email(), password: z.string().min(8) });
 export const adminUserQuerySchema = paginationSchema.extend({ search: z.string().optional() });
 export const adminUserActionSchema = z.object({ banned: z.boolean() });

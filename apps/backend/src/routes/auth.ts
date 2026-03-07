@@ -7,6 +7,7 @@ import { prisma } from '../utils/prisma.js';
 import { loginSchema, registerSchema, resetSchema } from '../utils/schemas.js';
 import { requireAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../utils/asyncHandler.js';
+import { userProfileSelect } from '../utils/selects.js';
 
 const resetStore = new Map<string, string>();
 export const authRouter = Router();
@@ -69,6 +70,6 @@ authRouter.post('/reset-password', asyncHandler(async (req, res) => {
 }));
 
 authRouter.get('/me', requireAuth, asyncHandler(async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, email: true, role: true, timezone: true, weekStartsOn: true, hourFormat24: true } });
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: userProfileSelect });
   res.json(user);
 }));

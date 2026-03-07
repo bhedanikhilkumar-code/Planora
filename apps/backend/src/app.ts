@@ -10,6 +10,7 @@ import { asyncHandler } from './utils/asyncHandler.js';
 import { errorMiddleware } from './utils/errors.js';
 import { requireAuth } from './middleware/auth.js';
 import { prisma } from './utils/prisma.js';
+import { userProfileSelect } from './utils/selects.js';
 
 export const app = express();
 app.use(helmet());
@@ -20,7 +21,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.get('/health', (_req, res) => res.json({ status: 'ok' }));
 app.get('/me', requireAuth, asyncHandler(async (req, res) => {
-  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: { id: true, email: true, role: true, timezone: true, weekStartsOn: true, hourFormat24: true } });
+  const user = await prisma.user.findUnique({ where: { id: req.user!.id }, select: userProfileSelect });
   res.json(user);
 }));
 app.use('/auth', authRouter);

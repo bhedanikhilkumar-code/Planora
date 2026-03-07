@@ -13,6 +13,7 @@ import { eventSchema, eventsListQuerySchema, eventUpdateSchema, idParamSchema, q
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
 const storage = new LocalStorageAdapter();
 const remindersPayloadError = 'Invalid reminders payload. Provide a JSON array of minutes.';
+const invalidIcsPayloadError = 'Invalid ICS file.';
 
 const parseRemindersInput = (raw: unknown): unknown[] => {
   if (raw === undefined || raw === null || raw === '') {
@@ -38,6 +39,16 @@ const parseRemindersInput = (raw: unknown): unknown[] => {
   throw new AppError(400, remindersPayloadError);
 };
 
+const parseIcsEvents = (raw: string): ICAL.Component[] => {
+  try {
+    const jcalData = ICAL.parse(raw);
+    const vcalendar = new ICAL.Component(jcalData);
+    return vcalendar.getAllSubcomponents('vevent');
+  } catch {
+    throw new AppError(400, invalidIcsPayloadError);
+  }
+};
+
 export const eventsRouter = Router();
 eventsRouter.use(requireAuth);
 
@@ -57,14 +68,13 @@ eventsRouter.get('/export/ics', asyncHandler(async (req, res) => {
 
 eventsRouter.post('/import/ics', upload.single('file'), asyncHandler(async (req, res) => {
   if (!req.file) throw new AppError(400, 'ICS file is required');
-  const jcalData = ICAL.parse(req.file.buffer.toString('utf-8'));
-  const vcalendar = new ICAL.Component(jcalData);
-  const vevents = vcalendar.getAllSubcomponents('vevent');
+  const vevents = parseIcsEvents(req.file.buffer.toString('utf-8'));
   const created: string[] = [];
   for (const comp of vevents) {
     const event = new ICAL.Event(comp);
     const startAt = event.startDate.toJSDate();
     const endAt = event.endDate.toJSDate();
+    if (!(endAt > startAt)) throw new AppError(400, 'Event end date must be after start date.');
     if (startAt.getUTCFullYear() < 2000 || endAt.getUTCFullYear() > 2099) throw new AppError(400, 'Date must be between 2000-01-01 and 2099-12-31.');
     const record = await prisma.event.create({ data: { userId: req.user!.id, title: event.summary || 'Imported Event', startAt, endAt, description: event.description || undefined, location: event.location || undefined } });
     created.push(record.id);

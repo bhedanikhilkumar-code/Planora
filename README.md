@@ -1,19 +1,24 @@
 # Planora
 
-Full-stack calendar platform with a user app, admin control panel, recurrence support, and secure event management.
+<p align="left">
+  <a href="https://github.com/bhedanikhilkumar-code/Planora"><img src="https://img.shields.io/badge/Repo-GitHub-111827?style=for-the-badge&logo=github&logoColor=white" alt="Repo" /></a>
+  <img src="https://img.shields.io/badge/Architecture-Monorepo-0F172A?style=for-the-badge" alt="Monorepo" />
+  <img src="https://img.shields.io/badge/Dev%20Setup-Docker%20Ready-0A66C2?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Ready" />
+</p>
 
-## Overview
-Planora is a monorepo-based calendar application built for structured scheduling and administration. It combines a user-facing calendar experience with an admin dashboard for operational control, making it suitable for products that need event management, authentication, recurrence handling, audit visibility, and settings management.
+Full-stack calendar and admin platform with recurrence, ICS import/export, authentication, and PostgreSQL-backed event workflows.
 
-The project is designed around clean separation between frontend and backend apps while sharing a single repository and a clear development workflow.
+## What This Project Solves
+Many scheduling products need more than a calendar UI. They also need structured event creation, recurring schedules, import/export workflows, admin visibility, authentication, and data validation.
 
-## Highlights
-- Full-stack calendar application with dedicated admin panel
+Planora is designed around that full workflow, combining a user-facing calendar experience with backend logic and admin controls inside one monorepo.
+
+## Key Capabilities
 - Event CRUD with validation and date guardrails
 - Recurring event support and occurrence generation
-- ICS import/export support
-- JWT-based authentication with refresh flow
-- Audit logs and administrative controls
+- ICS import / export workflows
+- JWT authentication with refresh flow
+- Admin controls, moderation, and audit visibility
 - Docker-ready local development setup
 
 ## Tech Stack
@@ -45,7 +50,7 @@ Planora/
 └── package.json
 ```
 
-## Feature Set
+## Feature Areas
 ### Calendar Experience
 - Create, edit, view, and delete events
 - Filter and search events
@@ -58,8 +63,8 @@ Planora/
 - Guard against invalid file content and invalid time ranges
 
 ### Authentication & Security
-- Register, login, logout, refresh token flow
-- Forgot/reset password routes
+- Register, login, logout, and refresh token flow
+- Forgot / reset password routes
 - Backend environment validation on startup
 - Structured request validation with Zod
 
@@ -116,42 +121,11 @@ npm run test -w @planora/frontend
 - Admin: `admin@example.com` / `Admin@12345`
 - User: `user@example.com` / `User@12345`
 
-## Key API Areas
-### Auth
-- `POST /auth/register`
-- `POST /auth/login`
-- `POST /auth/refresh`
-- `POST /auth/logout`
-- `POST /auth/forgot-password`
-- `POST /auth/reset-password`
-- `GET /auth/me`
+## Why This Project Stands Out
+Planora demonstrates strong full-stack fundamentals: monorepo organization, backend validation, recurring scheduling logic, authentication flows, admin capabilities, and test coverage across both application layers.
 
-### Events
-- `GET /events`
-- `POST /events`
-- `GET /events/:id`
-- `PUT /events/:id`
-- `DELETE /events/:id`
-- `POST /events/:id/recurrence`
-- `GET /events/:id/occurrences`
-- `GET /events/export/ics`
-- `POST /events/import/ics`
-
-### Admin
-- `POST /admin/login`
-- `GET /admin/kpis`
-- `GET /admin/users`
-- `PATCH /admin/users/:id/ban`
-- `PATCH /admin/users/:id/role`
-- `POST /admin/users/:id/reset-password`
-- `GET /admin/audit-logs`
-- `GET /admin/events`
-- `DELETE /admin/events/:id`
-- `GET /admin/settings`
-- `PATCH /admin/settings`
-
-## Why This Project Matters
-Planora demonstrates strong full-stack fundamentals: monorepo organization, backend validation, database-driven workflows, admin capabilities, recurring scheduling logic, and test coverage across both application layers.
+## Demo Status
+This repository currently documents a strong local development setup, but does not expose a public live demo link yet.
 
 ## License
 Licensed under the MIT License. See `LICENSE` for details.

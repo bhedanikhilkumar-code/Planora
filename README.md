@@ -1,29 +1,91 @@
 # Planora
 
-Planora is an end-to-end calendar monorepo with user calendar app + admin control panel.
+Full-stack calendar platform with a user app, admin control panel, recurrence support, and secure event management.
 
-## Stack
-- Frontend: React + TypeScript + Vite + Tailwind + FullCalendar
-- Backend: Node.js + TypeScript + Express
-- Database: PostgreSQL + Prisma
-- Auth: JWT access/refresh + bcrypt
-- Validation: Zod
-- Tests: Jest + Supertest (backend), Vitest (frontend)
-- DevOps: Docker + docker-compose
+## Overview
+Planora is a monorepo-based calendar application built for structured scheduling and administration. It combines a user-facing calendar experience with an admin dashboard for operational control, making it suitable for products that need event management, authentication, recurrence handling, audit visibility, and settings management.
+
+The project is designed around clean separation between frontend and backend apps while sharing a single repository and a clear development workflow.
+
+## Highlights
+- Full-stack calendar application with dedicated admin panel
+- Event CRUD with validation and date guardrails
+- Recurring event support and occurrence generation
+- ICS import/export support
+- JWT-based authentication with refresh flow
+- Audit logs and administrative controls
+- Docker-ready local development setup
+
+## Tech Stack
+### Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- FullCalendar
+- Vitest
+
+### Backend
+- Node.js
+- Express
+- TypeScript
+- Prisma
+- PostgreSQL
+- Zod
+- JWT authentication
+- Jest + Supertest
+
+## Monorepo Structure
+```text
+Planora/
+├── apps/
+│   ├── backend/   # Express API, Prisma schema, tests, auth, recurrence
+│   └── frontend/  # React calendar UI and admin flows
+├── docker-compose.yml
+└── package.json
+```
+
+## Feature Set
+### Calendar Experience
+- Create, edit, view, and delete events
+- Filter and search events
+- Validate event ranges before saving
+- Generate recurring event schedules
+
+### Import / Export
+- Export events to ICS
+- Import ICS files with validation
+- Guard against invalid file content and invalid time ranges
+
+### Authentication & Security
+- Register, login, logout, refresh token flow
+- Forgot/reset password routes
+- Backend environment validation on startup
+- Structured request validation with Zod
+
+### Admin Panel
+- Admin login and protected routes
+- User management and role control
+- Audit logs
+- Event moderation and platform settings
 
 ## Date Guardrail
-All date fields are validated in the allowed range:
-- Min: `2000-01-01`
-- Max: `2099-12-31`
-Outside this range returns: `Date must be between 2000-01-01 and 2099-12-31.`
+All event dates are validated within this range:
+- Minimum: `2000-01-01`
+- Maximum: `2099-12-31`
 
-## Folder structure
-- `apps/backend`: Express API, Prisma schema/migrations/seed, tests
-- `apps/frontend`: Vite React user/admin UI, tests
-- `docker-compose.yml`: DB + backend + frontend
+Requests outside this window are rejected.
 
-## Setup (non-Docker)
+## Getting Started
+### Prerequisites
+- Node.js 18+
+- npm
+- PostgreSQL
+
+### Local setup
 ```bash
+git clone https://github.com/bhedanikhilkumar-code/Planora.git
+cd Planora
 npm install
 cp apps/backend/.env.example apps/backend/.env
 cp apps/frontend/.env.example apps/frontend/.env
@@ -32,52 +94,29 @@ npm run prisma:migrate -w @planora/backend
 npm run prisma:seed -w @planora/backend
 npm run dev
 ```
-Backend startup now validates env vars and exits early on invalid values. Required backend vars are:
-- `DATABASE_URL`
-- `JWT_ACCESS_SECRET` (minimum 16 chars)
-- `JWT_REFRESH_SECRET` (minimum 16 chars)
-- `PORT` (1-65535, defaults to `4000`)
-- `FRONTEND_URL` (valid URL, defaults to `http://localhost:5173`)
 
-## Setup (Docker)
+### Docker setup
 ```bash
 docker compose up --build
 ```
 
-## Production builds
+## Build and Test
+### Build
 ```bash
 npm run build
-npm run start -w @planora/backend
-npm run preview -w @planora/frontend
 ```
 
-## Run tests
+### Run backend and frontend tests
 ```bash
 npm run test -w @planora/backend
 npm run test -w @planora/frontend
 ```
 
-## Seed users
+## Default Seed Accounts
 - Admin: `admin@example.com` / `Admin@12345`
 - User: `user@example.com` / `User@12345`
 
-## Admin Control Panel
-- Admin login route: `/admin/login`
-- Admin routes (protected):
-  - `/admin/dashboard`
-  - `/admin/users`
-  - `/admin/users/:id`
-  - `/admin/events`
-  - `/admin/audit-logs`
-  - `/admin/settings`
-
-### Default admin credentials
-- Email: `admin@example.com`
-- Password: `Admin@12345`
-
-
-## API docs
-
+## Key API Areas
 ### Auth
 - `POST /auth/register`
 - `POST /auth/login`
@@ -88,34 +127,15 @@ npm run test -w @planora/frontend
 - `GET /auth/me`
 
 ### Events
-- `GET /events?from=&to=&q=&category=&page=&limit=`
+- `GET /events`
 - `POST /events`
 - `GET /events/:id`
 - `PUT /events/:id`
 - `DELETE /events/:id`
-
-#### Event create payload notes
-- `reminders` supports either:
-  - JSON array in multipart form-data (example: `"[10,30]"`)
-  - direct array in JSON body (example: `[10,30]`)
-- Invalid `reminders` payloads return: `Invalid reminders payload. Provide a JSON array of minutes.`
-
-### Recurrence
 - `POST /events/:id/recurrence`
-- `GET /events/:id/occurrences?from=&to=`
-
-### ICS
-- `GET /events/export/ics?from=&to=`
+- `GET /events/:id/occurrences`
+- `GET /events/export/ics`
 - `POST /events/import/ics`
-
-#### ICS import validation
-- Invalid file content returns: `Invalid ICS file.`
-- Imported events must have `endAt > startAt`.
-- Imported event dates must still be within `2000-01-01` to `2099-12-31`.
-
-## Frontend calendar UX
-- Event modal validates required fields and blocks save when `endAt <= startAt`.
-- Calendar page supports local search-by-title and optional date range filtering from the side filter panel.
 
 ### Admin
 - `POST /admin/login`
@@ -129,3 +149,9 @@ npm run test -w @planora/frontend
 - `DELETE /admin/events/:id`
 - `GET /admin/settings`
 - `PATCH /admin/settings`
+
+## Why This Project Matters
+Planora demonstrates strong full-stack fundamentals: monorepo organization, backend validation, database-driven workflows, admin capabilities, recurring scheduling logic, and test coverage across both application layers.
+
+## License
+Licensed under the MIT License. See `LICENSE` for details.

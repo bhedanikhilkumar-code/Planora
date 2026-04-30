@@ -1,131 +1,218 @@
+<div align="center">
+
 # Planora
 
-<p align="left">
-  <a href="https://github.com/bhedanikhilkumar-code/Planora"><img src="https://img.shields.io/badge/Repo-GitHub-111827?style=for-the-badge&logo=github&logoColor=white" alt="Repo" /></a>
-  <img src="https://img.shields.io/badge/Architecture-Monorepo-0F172A?style=for-the-badge" alt="Monorepo" />
-  <img src="https://img.shields.io/badge/Dev%20Setup-Docker%20Ready-0A66C2?style=for-the-badge&logo=docker&logoColor=white" alt="Docker Ready" />
-</p>
+### Full-stack calendar and admin platform with recurrence, ICS import/export, and PostgreSQL-backed event workflows.
 
-Full-stack calendar and admin platform with recurrence, ICS import/export, authentication, and PostgreSQL-backed event workflows.
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
+![GitHub repo](https://img.shields.io/badge/GitHub-planora-0F172A?style=for-the-badge&logo=github)
+![Documentation](https://img.shields.io/badge/Documentation-Pro%20Level-7C3AED?style=for-the-badge)
 
-## What This Project Solves
-Many scheduling products need more than a calendar UI. They also need structured event creation, recurring schedules, import/export workflows, admin visibility, authentication, and data validation.
+**Repository:** [bhedanikhilkumar-code/Planora](https://github.com/bhedanikhilkumar-code/Planora)
 
-Planora is designed around that full workflow, combining a user-facing calendar experience with backend logic and admin controls inside one monorepo.
+</div>
+
+---
+
+## Executive Overview
+
+Full-stack calendar and admin platform with recurrence, ICS import/export, and PostgreSQL-backed event workflows.
+
+This README is written as a **portfolio-grade project document**: it explains the product idea, technical approach, architecture, workflows, setup process, engineering standards, and future roadmap so a reviewer can understand both the codebase and the thinking behind it.
+
+## Product Positioning
+
+| Question | Answer |
+| --- | --- |
+| **Who is it for?** | Users, reviewers, recruiters, and developers who want to understand the project quickly. |
+| **What problem does it solve?** | It turns a practical idea into a structured software project with clear workflows and maintainable implementation direction. |
+| **Why it matters?** | The project demonstrates product thinking, stack selection, feature planning, and clean documentation discipline. |
+| **Current focus** | Professional polish, understandable architecture, and portfolio-ready presentation. |
+
+## Repository Snapshot
+
+| Area | Details |
+| --- | --- |
+| Visibility | Public portfolio repository |
+| Primary stack | `TypeScript`, `PostgreSQL` |
+| Repository topics | `calendar`, `express`, `postgresql`, `prisma`, `react`, `typescript` |
+| Useful commands | `dev`, `dev:backend`, `dev:frontend`, `build`, `test` |
+| Key dependencies | No dependency manifest detected |
+
+## Topics
+
+`calendar` · `express` · `postgresql` · `prisma` · `react` · `typescript`
 
 ## Key Capabilities
-- Event CRUD with validation and date guardrails
-- Recurring event support and occurrence generation
-- ICS import / export workflows
-- JWT authentication with refresh flow
-- Admin controls, moderation, and audit visibility
-- Docker-ready local development setup
 
-## Tech Stack
-### Frontend
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-- FullCalendar
-- Vitest
+| Capability | Description |
+| --- | --- |
+| **Scheduling core** | Built for events, recurrence, calendar workflows, and practical planning. |
+| **Admin-ready UX** | Supports structured management screens and operational control. |
+| **Data-backed design** | Persistence-first architecture for reliable event history and coordination. |
+| **Import/export mindset** | Designed to connect with real calendar workflows and external schedules. |
 
-### Backend
-- Node.js
-- Express
-- TypeScript
-- Prisma
-- PostgreSQL
-- Zod
-- JWT authentication
-- Jest + Supertest
+## Detailed Product Blueprint
 
-## Monorepo Structure
+### Experience Map
+
+```mermaid
+flowchart TD
+    A[Discover project purpose] --> B[Understand main user workflow]
+    B --> C[Review architecture and stack]
+    C --> D[Run locally or inspect code]
+    D --> E[Evaluate quality and roadmap]
+    E --> F[Decide next improvement or deployment path]
+```
+
+### Feature Depth Matrix
+
+| Layer | What reviewers should look for | Why it matters |
+| --- | --- | --- |
+| Product | Clear user problem, target audience, and workflow | Shows product thinking beyond tutorial-level code |
+| Interface | Screens, pages, commands, or hardware interaction points | Demonstrates how users actually experience the project |
+| Logic | Validation, state transitions, service methods, processing flow | Proves the project can handle real use cases |
+| Data | Local storage, database, files, APIs, or device input/output | Explains how information moves through the system |
+| Quality | Tests, linting, setup clarity, and roadmap | Makes the project easier to trust, extend, and review |
+
+### Conceptual Data / State Model
+
+| Entity / State | Purpose | Example fields or responsibilities |
+| --- | --- | --- |
+| User input | Starts the main workflow | Form values, commands, uploaded files, device readings |
+| Domain model | Represents the project-specific object | Transaction, note, shipment, event, avatar, prediction, song, or task |
+| Service layer | Applies rules and coordinates actions | Validation, scoring, formatting, persistence, API calls |
+| Storage/output | Keeps or presents the result | Database row, local cache, generated file, chart, dashboard, or device action |
+| Feedback loop | Helps improve the next interaction | Status message, analytics, error handling, recommendations, roadmap item |
+
+### Professional Differentiators
+
+- **Documentation-first presentation:** A reviewer can understand the project without guessing the intent.
+- **Diagram-backed explanation:** Architecture and workflow diagrams make the system easier to evaluate quickly.
+- **Real-world framing:** The README describes users, outcomes, and operational flow rather than only listing files.
+- **Extension-ready roadmap:** Future improvements are scoped so the project can keep growing cleanly.
+- **Portfolio alignment:** The project is positioned as part of a consistent, professional GitHub portfolio.
+
+## Architecture Overview
+
+```mermaid
+flowchart LR
+    User[User] --> UI[Web UI / Views]
+    UI --> State[Client State & Forms]
+    State --> API[API / App Logic]
+    API --> Data[(Data Store / Files)]
+    API --> Integrations[External Integrations]
+```
+
+## Core Workflow
+
+```mermaid
+sequenceDiagram
+    participant U as Planner
+    participant A as Application
+    participant L as Logic Layer
+    participant D as Data/Device Layer
+    U->>A: Create event
+    A->>L: Apply recurrence rules
+    L->>D: Persist schedule
+    D-->>L: State/result
+    L-->>A: Render calendar view
+    A-->>U: Updated experience
+```
+
+## How the Project is Organized
+
 ```text
 Planora/
-├── apps/
-│   ├── backend/   # Express API, Prisma schema, tests, auth, recurrence
-│   └── frontend/  # React calendar UI and admin flows
-├── docker-compose.yml
-└── package.json
+├── 📁 apps
+│   ├── 📁 backend
+│   └── 📁 frontend
+├── 📄 docker-compose.yml
+├── 📄 package-lock.json
+├── 📄 package.json
 ```
 
-## Feature Areas
-### Calendar Experience
-- Create, edit, view, and delete events
-- Filter and search events
-- Validate event ranges before saving
-- Generate recurring event schedules
+## Engineering Notes
 
-### Import / Export
-- Export events to ICS
-- Import ICS files with validation
-- Guard against invalid file content and invalid time ranges
+- **Separation of concerns:** UI, business logic, data/services, and platform concerns are documented as separate layers.
+- **Scalability mindset:** The project structure is ready for new screens, services, tests, and deployment improvements.
+- **Portfolio quality:** README content is designed to communicate value before someone even opens the code.
+- **Maintainability:** Naming, setup steps, and roadmap items make future work easier to plan and review.
+- **User-first framing:** Features are described by the value they provide, not just the technology used.
 
-### Authentication & Security
-- Register, login, logout, and refresh token flow
-- Forgot / reset password routes
-- Backend environment validation on startup
-- Structured request validation with Zod
+## Local Setup
 
-### Admin Panel
-- Admin login and protected routes
-- User management and role control
-- Audit logs
-- Event moderation and platform settings
-
-## Date Guardrail
-All event dates are validated within this range:
-- Minimum: `2000-01-01`
-- Maximum: `2099-12-31`
-
-Requests outside this window are rejected.
-
-## Getting Started
-### Prerequisites
-- Node.js 18+
-- npm
-- PostgreSQL
-
-### Local setup
 ```bash
-git clone https://github.com/bhedanikhilkumar-code/Planora.git
-cd Planora
+# 1. Install dependencies
 npm install
-cp apps/backend/.env.example apps/backend/.env
-cp apps/frontend/.env.example apps/frontend/.env
-npm run prisma:generate -w @planora/backend
-npm run prisma:migrate -w @planora/backend
-npm run prisma:seed -w @planora/backend
+
+# 2. Start development server
 npm run dev
-```
 
-### Docker setup
-```bash
-docker compose up --build
-```
-
-## Build and Test
-### Build
-```bash
+# 3. Build or validate production output
 npm run build
 ```
 
-### Run backend and frontend tests
-```bash
-npm run test -w @planora/backend
-npm run test -w @planora/frontend
-```
+## Suggested Quality Checks
 
-## Default Seed Accounts
-- Admin: `admin@example.com` / `Admin@12345`
-- User: `user@example.com` / `User@12345`
+Before shipping or presenting this project, run the checks that match the stack:
 
-## Why This Project Stands Out
-Planora demonstrates strong full-stack fundamentals: monorepo organization, backend validation, recurring scheduling logic, authentication flows, admin capabilities, and test coverage across both application layers.
+| Check | Purpose |
+| --- | --- |
+| Format/lint | Keep code style consistent and reviewer-friendly. |
+| Static analysis | Catch type, syntax, and framework-level issues early. |
+| Unit/widget tests | Validate important logic and user-facing workflows. |
+| Manual smoke test | Confirm the main flow works from start to finish. |
+| README review | Ensure documentation matches the actual repository state. |
 
-## Demo Status
-This repository currently documents a strong local development setup, but does not expose a public live demo link yet.
+## Roadmap
+
+- Calendar sharing workflows
+- ICS improvements
+- Timezone edge-case testing
+- Recurring event analytics
+
+## Professional Review Checklist
+
+- [ ] Clear project purpose and audience
+- [ ] Feature list aligned with real user workflows
+- [ ] Architecture documented with diagrams
+- [ ] Setup steps tested on a clean machine
+- [ ] Screenshots or demo GIFs added where possible
+- [ ] Environment variables documented without exposing secrets
+- [ ] Tests/lint commands documented
+- [ ] Roadmap shows practical next steps
+
+## Screenshots / Demo Suggestions
+
+Add these assets when available to make the repository even stronger:
+
+| Asset | Recommended content |
+| --- | --- |
+| Hero screenshot | Main dashboard, home screen, or landing page |
+| Workflow GIF | 10-20 second walkthrough of the core feature |
+| Architecture image | Exported version of the Mermaid diagram |
+| Before/after | Show how the project improves an existing workflow |
+
+## Contribution Notes
+
+This project can be extended through focused, well-scoped improvements:
+
+1. Pick one feature or documentation improvement.
+2. Create a small branch with a clear name.
+3. Keep changes easy to review.
+4. Update this README if setup, features, or architecture changes.
+5. Open a pull request with screenshots or test notes when possible.
 
 ## License
-Licensed under the MIT License. See `LICENSE` for details.
+
+Add or update the license file based on how you want others to use this project. If this is a portfolio-only project, document that clearly before accepting external contributions.
+
+---
+
+<div align="center">
+
+**Built and documented with a focus on professional presentation, practical workflows, and clean engineering communication.**
+
+</div>

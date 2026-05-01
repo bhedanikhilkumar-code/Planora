@@ -21,28 +21,46 @@
 
 ## Executive Overview
 
-Full-stack calendar and admin platform with recurrence, ICS import/export, and PostgreSQL-backed event workflows.
+Planora is a full-stack calendar and admin platform for event planning, recurrence handling, ICS import/export, user authentication, attachments, audit logs, and admin management.
 
-This README is written as a **portfolio-grade project document**: it explains the product idea, technical approach, architecture, workflows, setup process, engineering standards, and future roadmap so a reviewer can understand both the codebase and the thinking behind it.
+The project is positioned as a **portfolio-grade scheduling product**: it combines a React calendar UI, Express/Prisma backend, PostgreSQL persistence, recurrence logic, import/export flows, and admin screens that show product thinking beyond a simple calendar clone.
+
+## Recruiter Quick Scan
+
+| What to notice | Why it matters |
+| --- | --- |
+| **Real scheduling domain** | Events, recurrence, reminders, attachments, ICS import/export, filtering, and date-range workflows. |
+| **Full-stack architecture** | Monorepo with separate frontend/backend apps, Prisma data access, PostgreSQL-ready design, and typed TypeScript boundaries. |
+| **Admin tooling** | Admin dashboard, users, event management, settings, audit logs, and protected admin routes. |
+| **Quality mindset** | Backend Jest/Supertest setup, frontend Vitest setup, validation with Zod, auth middleware, rate limiting, and security headers. |
+| **Recruiter signal** | Demonstrates practical product engineering around time, data, roles, validation, and interoperability. |
+
+## Demo Preview
+
+| Calendar workspace |
+| --- |
+| <img src="docs/assets/screenshots/planora-calendar.png" alt="Planora calendar workspace preview" /> |
+
+> Screenshot captured from the local running frontend so visitors can see the calendar experience without installing the project first.
 
 ## Product Positioning
 
 | Question | Answer |
 | --- | --- |
-| **Who is it for?** | Users, reviewers, recruiters, and developers who want to understand the project quickly. |
-| **What problem does it solve?** | It turns a practical idea into a structured software project with clear workflows and maintainable implementation direction. |
-| **Why it matters?** | The project demonstrates product thinking, stack selection, feature planning, and clean documentation discipline. |
-| **Current focus** | Professional polish, understandable architecture, and portfolio-ready presentation. |
+| **Who is it for?** | Individuals, teams, admins, and reviewers who need structured scheduling, import/export, and calendar management workflows. |
+| **What problem does it solve?** | Calendar tools often become hard to inspect, migrate, or manage at scale. Planora centralizes scheduling with recurrence, filtering, ICS interoperability, and admin oversight. |
+| **Why it matters?** | It demonstrates full-stack planning around dates, roles, security, validation, persistence, and operational admin workflows. |
+| **Current focus** | More polished frontend states, timezone edge-case testing, richer import/export flows, and production deployment readiness. |
 
 ## Repository Snapshot
 
 | Area | Details |
 | --- | --- |
 | Visibility | Public portfolio repository |
-| Primary stack | `TypeScript`, `PostgreSQL` |
-| Repository topics | `calendar`, `express`, `postgresql`, `prisma`, `react`, `typescript` |
-| Useful commands | `dev`, `dev:backend`, `dev:frontend`, `build`, `test` |
-| Key dependencies | No dependency manifest detected |
+| Primary stack | `React`, `TypeScript`, `Express`, `Prisma`, `PostgreSQL`, `FullCalendar` |
+| Product areas | Calendar views, recurrence, reminders, attachments, import/export, auth, admin dashboard, audit logs |
+| Useful commands | `npm run dev`, `npm run build`, `npm run test`, `npm run prisma:migrate -w @planora/backend` |
+| Key dependencies | `@fullcalendar/*`, `@prisma/client`, `express`, `ics`, `ical.js`, `rrule`, `zod`, `jest`, `vitest` |
 
 ## Topics
 
@@ -52,10 +70,12 @@ This README is written as a **portfolio-grade project document**: it explains th
 
 | Capability | Description |
 | --- | --- |
-| **Scheduling core** | Built for events, recurrence, calendar workflows, and practical planning. |
-| **Admin-ready UX** | Supports structured management screens and operational control. |
-| **Data-backed design** | Persistence-first architecture for reliable event history and coordination. |
-| **Import/export mindset** | Designed to connect with real calendar workflows and external schedules. |
+| **Calendar workspace** | Month/week/day/list calendar views with event creation, filtering, and drawer-based event review. |
+| **Recurring events** | Recurrence service and API endpoints for recurring schedules and occurrence expansion. |
+| **ICS interoperability** | Import `.ics` files, validate calendar payloads, and export event ranges as calendar files. |
+| **User workflows** | Auth pages, protected calendar routes, settings, search filters, reminders, and attachment-aware event APIs. |
+| **Admin operations** | Admin login, dashboard, user detail pages, event management, settings, and audit log review. |
+| **Backend discipline** | Prisma persistence, Zod validation, auth middleware, rate limiting, error handling, storage adapter, and test setup. |
 
 <!-- PROJECT_DOCS_HUB_START -->
 
@@ -197,25 +217,22 @@ Before shipping or presenting this project, run the checks that match the stack:
 
 ## Professional Review Checklist
 
-- [ ] Clear project purpose and audience
-- [ ] Feature list aligned with real user workflows
-- [ ] Architecture documented with diagrams
+- [x] Clear project purpose and audience
+- [x] Feature list aligned with real user workflows
+- [x] Architecture documented with diagrams
+- [x] Screenshots added for quick recruiter review
 - [ ] Setup steps tested on a clean machine
-- [ ] Screenshots or demo GIFs added where possible
 - [ ] Environment variables documented without exposing secrets
 - [ ] Tests/lint commands documented
 - [ ] Roadmap shows practical next steps
 
-## Screenshots / Demo Suggestions
+## Screenshots / Demo Notes
 
-Add these assets when available to make the repository even stronger:
-
-| Asset | Recommended content |
+| Asset | Status |
 | --- | --- |
-| Hero screenshot | Main dashboard, home screen, or landing page |
-| Workflow GIF | 10-20 second walkthrough of the core feature |
-| Architecture image | Exported version of the Mermaid diagram |
-| Before/after | Show how the project improves an existing workflow |
+| Calendar workspace preview | Added at `docs/assets/screenshots/planora-calendar.png` |
+| Workflow GIF | Future improvement: create event → apply recurrence → export ICS walkthrough |
+| Architecture image | Future improvement: exported visual version of the Mermaid architecture diagram |
 
 ## Contribution Notes
 
